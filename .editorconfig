@@ -1,0 +1,45 @@
+root = true
+
+[*]
+indent_style = space
+indent_size = 2
+end_of_line = lf
+charset = utf-8
+trim_trailing_whitespace = false
+insert_final_newline = false
+
+[{makefile,*.mk}]
+end_of_line = lf
+indent_style = tab
+indent_size = 4
+
+[{*.sh,*.jq}]
+end_of_line = lf
+trim_trailing_whitespace = false
+insert_final_newline = true
+
+[.env]
+end_of_line = lf
+
+[.makerc]
+end_of_line = lf
+
+[{exclude.txt,package.txt,frames*.txt}]
+end_of_line = lf
+insert_final_newline = true
+
+[*.py]
+indent_style = tab
+indent_size = 2
+
+[*.adoc]
+indent_size = 4
+
+[*.command]
+end_of_line = lf
+
+[*.gemspec]
+indent_size = 2
+
+[*.rb]
+indent_size = 2

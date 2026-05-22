@@ -1,0 +1,13 @@
+PROJECT={{ project }}
+PREFIX={{ prefix }}
+COLLABTYPE=Git
+DEPLOYFILES={{ deployfiles }}
+PROJECTTYPE={{ project_type }}
+UPLOAD=stage
+PACKAGEFORMAT=zip
+B3DVERSION={{ b3d_version }}
+KEEP=2
+WIP=RENDER/
+BUILDDIR=BUILD
+GODOT_VERSION={{ godot_version }}
+GODOT_PROJECT=SCENE_GODOT

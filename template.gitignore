@@ -1,0 +1,41 @@
+### template.gitignore
+## Linux system-specific. Appeared after deleting a file...
+.fuse_hidden*
+
+_OLD
+debug.log
+*cache
+CACHE/
+cache_*/
+*.FCStd1
+BUILD/*
+DIST/*
+RENDER/*
+PARKING_LOT/*
+*.blend[1-9]
+*.blend*[1-9]
+.blender_cloud/
+*-autosave.*
+*~
+.~*
+.vs/
+.autosave/
+.env
+.asciidoctor
+**/blendcache_*
+*.flamenco.blend
+*_[Tt][Ee][Ss][Tt]*
+!*TESTPATTERN*
+*.vdb
+Gemfile.lock
+LAYOUT/*.css
+LAYOUT/*.css.map
+
+## from broken ffmpeg process?...
+*.clbin
+## Massive animation cache files...
+ANIMATION
+
+## audacity temp files?
+*.aup3-*
+

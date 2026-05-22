@@ -1,0 +1,41 @@
+#!/bin/bash
+
+# Load local environment configurations
+if [ -f .makerc ]; then
+  source .makerc
+else
+  echo "Error: .makerc not found! Cannot resolve GODOT_VERSION or GODOT_PROJECT."
+  exit 1
+fi
+
+# Explicitly ensure ~/bin is included in the sub-shell PATH in case it hasn't loaded yet
+if [[ ":$PATH:" != *":$HOME/bin:"* ]]; then
+  export PATH="$HOME/bin:$PATH"
+fi
+
+export OCIO=
+
+# Resolve the executable binary name
+# Priority 1: Check if the new symlink style 'godot-4.x.y-stable' is available in PATH
+if command -v "godot-${GODOT_VERSION}" &>/dev/null; then
+  GODOT_BIN="godot-${GODOT_VERSION}"
+  echo "Launching using new symlink format: $GODOT_BIN"
+
+# Priority 2: Check if the old hardcoded filename format exists in PATH
+elif command -v "Godot_v${GODOT_VERSION}_linux.x86_64" &>/dev/null; then
+  GODOT_BIN="Godot_v${GODOT_VERSION}_linux.x86_64"
+  echo "Launching using old filename format: $GODOT_BIN"
+
+# Priority 3: Check if the symlink exists explicitly inside ~/bin even if ~/bin isn't in PATH
+elif [ -x "$HOME/bin/godot-${GODOT_VERSION}" ]; then
+  GODOT_BIN="$HOME/bin/godot-${GODOT_VERSION}"
+  echo "Launching directly from ~/bin: $GODOT_BIN"
+
+# Fallback: Default to old style behavior if nothing is resolved
+else
+  GODOT_BIN="Godot_v${GODOT_VERSION}_linux.x86_64"
+  echo "No active installation resolved. Attempting fallback launch using: $GODOT_BIN"
+fi
+
+# Launch Godot editor targeting the project path
+gnome-terminal -- "$GODOT_BIN" -e --path ./${GODOT_PROJECT}/

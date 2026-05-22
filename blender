@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# Usage: `B3DVERSION=4.2.0 ./blender`
+# or
+# `./blender`
+
+# set -x
+
+if [ -z "${B3DVERSION}" ]
+  then
+    source .makerc
+fi
+
+export OCIO=
+
+gnome-terminal -- blender-$B3DVERSION
