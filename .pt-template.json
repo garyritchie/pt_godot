@@ -1,0 +1,227 @@
+{
+  "name": "pt_godot",
+  "description": "Godot project (from pt-cli template)",
+  "templateRoot": "~/pt_godot",
+  "folders": [
+    {
+      "name": "APP",
+      "info": "## APP/\r\n\r\nMostly bash scripts used by the project `makefile`. Can also contain other scripts created during the course of the project, e.g. python snippets for use with Blender.",
+      "children": []
+    },
+    {
+      "name": "BUILD",
+      "info": "## BUILD/\r\n\r\nNot tracked. Artifacts generated from software build or compilation processes, e.g. binaries, executables.",
+      "children": []
+    },
+    {
+      "name": "DATA",
+      "info": "## DATA/\r\n\r\nData files used in the project. CSV, geotiff, etc.",
+      "children": []
+    },
+    {
+      "name": "DIST",
+      "info": "## DIST/\r\n\r\nFiles ready for delivery or distribution, usually at the end of a scripted build process.",
+      "children": []
+    },
+    {
+      "name": "DOC",
+      "info": "## DOC/\r\n\r\nDocumentation, such as project management worksheets and mind-mapping files.",
+      "children": []
+    },
+    {
+      "name": "FONT",
+      "info": "## FONT/\r\n\r\nFonts used in the project.",
+      "children": []
+    },
+    {
+      "name": "MATERIAL",
+      "info": "## MATERIAL/\r\n\r\nMaterial library for sharing between multiple models and scenes.",
+      "children": []
+    },
+    {
+      "name": "MODEL",
+      "info": "## MODEL/\n\n3d models, appended or linked into scenes.",
+      "children": []
+    },
+    {
+      "name": "PARKING_LOT",
+      "info": "## PARKING\\_LOT/\n\nA temporary location to drop inspirational and informative material that may become an asset or `REFERENCE` later.\n\nFiles from various sources and types, such as previous projects, stock photos, models, or a random image search. Create an additional folder to identify the source. Locate licensed material to `<asset type>/.../LICENSED` (and document). Move files with no clear license to `REFERENCE/` -- and *use as reference only.*\n\nFolder not version-controlled or part of a backup. Deleted at the end of the project.",
+      "children": []
+    },
+    {
+      "name": "REFERENCE",
+      "info": "## REFERENCE/\n\nFiles used for *reference only,* such as articles, rendering styles, typography. Files not usually renamed except to replace illegal characters. Create folders to help identify the source.",
+      "children": []
+    },
+    {
+      "name": "RENDER",
+      "info": "## RENDER/\n\nOutput from EDIT or COMP further organized by sequence/shot. Not tracked (version controlled) or synchronized. Use, e.g. `make ...mp4`, and `make dailies` to collect files for review.\n\nLocate final renders to `DAILIES/`, `DIST/` or `DELIVERABLE/`.",
+      "children": []
+    },
+    {
+      "name": "SCENE",
+      "info": "## SCENE/\n\nFile used to link/append-in models, materials, textures, etc. and for rendering an image, animation, or build an interactive product.",
+      "children": []
+    },
+    {
+      "name": "SCENE_GODOT",
+      "info": "## SCENE_\\[GODOT\\]/\n\nGodot game engine project for producing an interactive 3d experience. May contain an Godot-specific `.gitignore`. Parent folder should have updated `.gitattributes` for git lfs support.\n\nReplace _GODOT_ with scene/sequence identifier.\n\nFirst introduced during GLR/DMC.",
+      "children": [
+        {
+          "name": "ui",
+          "info": "",
+          "children": [
+            {
+              "name": "hud",
+              "info": "",
+              "children": []
+            },
+            {
+              "name": "scr",
+              "info": "",
+              "children": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "TEXTURE",
+      "info": "## TEXTURE/\n\nTexture maps and texture-generating project files.\n\nNot yet used for Quixel Mixer _Project_ files -- see `MIXER_PROJECT` for that.",
+      "children": []
+    }
+  ],
+  "copy_files": [
+    {
+      "src": ".editorconfig",
+      "dest": ".editorconfig",
+      "substitute_variables": true
+    },
+    {
+      "src": ".gitattributes",
+      "dest": ".gitattributes",
+      "substitute_variables": true
+    },
+    {
+      "src": ".info.md",
+      "dest": ".info.md",
+      "substitute_variables": true
+    },
+    {
+      "src": ".makerc",
+      "dest": ".makerc",
+      "substitute_variables": true
+    },
+    {
+      "src": "blender",
+      "dest": "blender",
+      "substitute_variables": true
+    },
+    {
+      "src": "godot",
+      "dest": "godot",
+      "substitute_variables": true
+    },
+    {
+      "src": "godot.gitignore",
+      "dest": "godot.gitignore",
+      "substitute_variables": true
+    },
+    {
+      "src": "macos.gitignore",
+      "dest": "macos.gitignore",
+      "substitute_variables": true
+    },
+    {
+      "src": "readme.md",
+      "dest": "readme.md",
+      "substitute_variables": true
+    },
+    {
+      "src": "template.gitignore",
+      "dest": "template.gitignore",
+      "substitute_variables": true
+    },
+    {
+      "src": "windows.gitignore",
+      "dest": "windows.gitignore",
+      "substitute_variables": true
+    },
+    {
+      "src": "APP",
+      "dest": "APP",
+      "substitute_variables": true
+    },
+    {
+      "src": "DOC",
+      "dest": "DOC",
+      "substitute_variables": true
+    }
+  ],
+  "variables": [
+    {
+      "name": "project",
+      "prompt": "Enter project code (abbreviation or initials):",
+      "default": "mcp",
+      "required": false
+    },
+    {
+      "name": "prefix",
+      "prompt": "Enter client project prefix (client-code_project-code):",
+      "default": "glr_mcp",
+      "required": false
+    },
+    {
+      "name": "deployfiles",
+      "prompt": "Enter deployfiles (folder that will contain your packaged builds):",
+      "default": "DIST/",
+      "required": false
+    },
+    {
+      "name": "project_type",
+      "prompt": "Enter project_type (e.g. Blender, Godot, WebXR, etc.):",
+      "default": "Godot",
+      "required": false
+    },
+    {
+      "name": "b3d_version",
+      "prompt": "Enter b3d_version (e.g. 5.2 or 5.2.4):",
+      "required": false
+    },
+    {
+      "name": "godot_version",
+      "prompt": "Enter godot_version (e.g. 4.7 or 4.7.1-stable):",
+      "required": false
+    },
+    {
+      "name": "project_name",
+      "prompt": "Enter project_name:",
+      "default": "My Cool Project",
+      "required": false
+    }
+  ],
+  "post_config": [
+    {
+      "command": "cat *.gitignore > .gitignore && rm *.gitignore",
+      "description": "gitignore"
+    },
+    {
+      "command": "git init",
+      "description": "Initialize git repository"
+    },
+    {
+      "command": "git lfs install",
+      "description": "Install git-lfs hooks"
+    }
+  ],
+  "post_copy": [
+    {
+      "src": "post_config.bat",
+      "dest": "post_config.bat"
+    },
+    {
+      "src": "post_config.sh",
+      "dest": "post_config.sh"
+    }
+  ]
+}
