@@ -22,8 +22,8 @@ This project is:
 ## Quickstart, no Git, no scripts
 
 1. Download the zip, extract and rename the top-level directory
-1. Adapt [[./DOC/filenaming.md]] to your requirements
-2. Delete folders and files you don't need for your project
+2. Adapt [[./DOC/filenaming.md]] to your requirements
+3. Delete folders and files you don't need for your project
 
 ## Quickstart
 
@@ -52,7 +52,7 @@ pt init pt_godot ./path/to/MY_NEW-TEMPLATE
 pt config pt_godot --json > ./path/to/MY_NEW-TEMPLATE/.pt-template.json
 ```
 
-Edit the `post_config` scripts, `.pt-template.json`, and `readme.md`, then
+Edit the `post_config` scripts, `.pt-template.json`, and `readme.md`, then:
 
 ```bash
 pt learn ./path/to/MY_NEW-TEMPLATE
@@ -66,7 +66,7 @@ Python 3.x required to use the scripts in `./APP/`
 
 - `python ./APP/getgodot.py -h` - For retrieving latest point-release. Symlinks it to your path.
 - `python ./APP/getblender.py -h` - Same as above but for Blender.
-- `python ./APP/tasks.py -h` - Partial translation of my main makefile. Relies heavily on companion `.makerc` or environment variables. NOT TESTED!
+- `python ./APP/tasks.py -h` - Work-in-progress translation of my main makefile. Relies heavily on companion `.makerc` or environment variables.
 
 ## Example Folder Structure
 
@@ -74,7 +74,7 @@ Placing the template as a sibling to your organizations allows `python ./APP/tas
 
 For example, given the structure below, doing `python ./APP/tasks.py update` within `PROJECT_B` will pull newer shell scripts from the `PROJECT_TEMPLATE` two levels up. An `.update-exclude` in the project root will prevent listed files from getting overwritten.
 
-Project "closedown", or retrospective, is an opportunity to migrate time-saving improvements of tools and structure back to the template.
+Project retrospective is an opportunity to migrate time-saving improvements of tools and structure back to the template.
 
 ```bash
 .
@@ -93,5 +93,5 @@ Project "closedown", or retrospective, is an opportunity to migrate time-saving 
 │   ├── .env
 │   ├── .makerc
 │   └── PROJECT_1/
-└── THIS_TEMPLATE/
+└── PROJECT_TEMPLATE/
 ```
