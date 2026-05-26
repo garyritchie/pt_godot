@@ -12,37 +12,69 @@ This project is:
 3. tools for automation (requires 1 and 2.)
 
 - [{{ project\_name }}](#-project_name-)
-  - [Quickstart, folders only](#quickstart-folders-only)
+  - [Quickstart, no Git, no scripts](#quickstart-no-git-no-scripts)
   - [Quickstart](#quickstart)
-  - [Recommended](#recommended)
+  - [Quickstart, pt-cli](#quickstart-pt-cli)
+    - [Customize](#customize)
+  - [Included Utility Scripts](#included-utility-scripts)
   - [Example Folder Structure](#example-folder-structure)
 
-## Quickstart, folders only
+## Quickstart, no Git, no scripts
 
-1. Copy the folders you'll use in your project
-2. Copy, and adapt [[./DOC/filenaming.md]] to your requirements
+1. Download the zip, extract and rename the top-level directory
+1. Adapt [[./DOC/filenaming.md]] to your requirements
+2. Delete folders and files you don't need for your project
 
 ## Quickstart
 
 1. Clone this git repo
-2. Copy `PROJECT_TEMPLATE` and rename the folder according to your project
-3. Ensure you have the _requirements_ (see below)
-4. Run the config script
+2. Copy and rename the folder according to your project
+3. Ensure you have Python
+4. Run the post_config script (`.bat` for Windows; `.sh` for Linux/macOS)
 
-After initial project configuration, edit this _readme_ for your project. Fork the PROJECT_TEMPLATE repo to customize for your organization or team.
+After initial project configuration, edit this _readme_ for your project. Fork the template repo to customize for your organization or team.
 
-## Recommended
+## Quickstart, pt-cli
 
-To get the most out of this template:
+```bash
+npm i @garyr/pt-cli
 
-- [pt-cli](https://github.com/garyritchie/pt-cli) - Useful for template management
-- Python 3.x - To use the scripts in `./APP/`
+pt learn https://github.com/garyritchie/pt_godot
+
+pt init pt_godot ./path/to/MY_PROJECT
+```
+
+### Customize
+
+```bash
+pt init pt_godot ./path/to/MY_NEW-TEMPLATE
+
+pt config pt_godot --json > ./path/to/MY_NEW-TEMPLATE/.pt-template.json
+```
+
+Edit the `post_config` scripts, `.pt-template.json`, and `readme.md`, then
+
+```bash
+pt learn ./path/to/MY_NEW-TEMPLATE
+```
+
+For more information and examples see <https://github.com/garyritchie/pt-cli/blob/main/doc/usage.md>
+
+## Included Utility Scripts
+
+Python 3.x required to use the scripts in `./APP/`
+
+- `python ./APP/getgodot.py -h` - For retrieving latest point-release. Symlinks it to your path.
+- `python ./APP/getblender.py -h` - Same as above but for Blender.
+- `python ./APP/tasks.py -h` - Partial translation of my main makefile. Relies heavily on companion `.makerc` or environment variables. NOT TESTED!
 
 ## Example Folder Structure
 
-Placing the template as a sibling to your organizations allows `make update` to work from within a project folder.
+Placing the template as a sibling to your organizations allows `python ./APP/tasks.py update` to work from within a project folder.
 
-For example, given the structure below, doing `make update` within `PROJECT_B` will pull newer makefiles and bash scripts from the `PROJECT_TEMPLATE` two levels up.
+For example, given the structure below, doing `python ./APP/tasks.py update` within `PROJECT_B` will pull newer shell scripts from the `PROJECT_TEMPLATE` two levels up. An `.update-exclude` in the project root will prevent listed files from getting overwritten.
+
+Project "closedown", or retrospective, is an opportunity to migrate time-saving improvements of tools and structure back to the template.
 
 ```bash
 .
