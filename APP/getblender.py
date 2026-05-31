@@ -18,7 +18,6 @@ from pathlib import Path
 
 # --- Configuration & Defaults ---
 DEFAULT_KEEP = 2
-DEFAULT_VERSION = "5.1"
 
 def load_makerc():
     """Parses local .makerc and parent .makerc files to resolve environment variables."""
@@ -41,42 +40,48 @@ def load_makerc():
 
 def parse_arguments():
     """Parses command-line arguments to allow easy, cross-platform overrides."""
-    parser = argparse.ArgumentParser(
+    global _parser
+    _parser = argparse.ArgumentParser(
         description="Robust Cross-Platform Blender Downloader and Environment Manager"
     )
     # Allow both a quick positional argument (e.g. python getblender.py 5.1) or an explicit flag
-    parser.add_argument(
+    _parser.add_argument(
         "pos_version",
         nargs="?",
         help="Blender version to download (e.g. 5.1 or 5.1.2). Overrides env and config.",
         default=None
     )
-    parser.add_argument(
+    _parser.add_argument(
         "-v", "--version",
         help="Blender version to download (alternative to positional argument).",
         default=None
     )
-    parser.add_argument(
+    _parser.add_argument(
         "-k", "--keep",
         type=int,
         help="Number of versions to keep. Overrides env and config.",
         default=None
     )
-    parser.add_argument(
+    _parser.add_argument(
         "--no-open",
         action="store_true",
         help="Suppress opening the download folder after extraction.",
         default=None
     )
-    return parser.parse_args()
+    return _parser.parse_args()
 
 # Parse arguments and load configurations
 args = parse_arguments()
 config_vars = load_makerc()
 
-# 1. Resolve Blender Version (CLI Arg -> Env -> .makerc -> Default)
+# 1. Resolve Blender Version (CLI Arg -> Env -> .makerc -> Required)
 cli_version = args.version or args.pos_version
-B3DVERSION = cli_version or os.environ.get('B3DVERSION') or config_vars.get('B3DVERSION') or DEFAULT_VERSION
+B3DVERSION = cli_version or os.environ.get('B3DVERSION') or config_vars.get('B3DVERSION')
+
+if not B3DVERSION or re.search(r'\{\{.*?\}\}', B3DVERSION):
+    print("Error: No Blender version specified. Set the B3DVERSION environment variable or pass a version argument.\n")
+    _parser.print_help()
+    sys.exit(1)
 
 # 2. Resolve Keep count (CLI Arg -> Env -> .makerc -> Default)
 cli_keep = args.keep
@@ -123,6 +128,78 @@ def is_wsl():
         except:
             pass
     return False
+
+def create_windows_shortcut(target_bin, version):
+    """Creates a Windows Start Menu shortcut (.lnk) using PowerShell."""
+    import subprocess
+    
+    # Ensure Windows backslashes are used and single quotes are escaped for PowerShell
+    target_bin_win = target_bin.replace('/', '\\').replace("'", "''")
+    if '\\' in target_bin_win:
+        working_dir_win = target_bin_win.rsplit('\\', 1)[0]
+    else:
+        working_dir_win = os.path.dirname(target_bin_win)
+        
+    ps_script = f"""
+    $appData = $env:APPDATA
+    if (-not $appData) {{
+        $appData = [System.Environment]::GetFolderPath([System.Environment+SpecialFolder]::ApplicationData)
+    }}
+    $shortcutDir = Join-Path $appData "Microsoft\\Windows\\Start Menu\\Programs"
+    if (-not (Test-Path $shortcutDir)) {{
+        New-Item -ItemType Directory -Force -Path $shortcutDir | Out-Null
+    }}
+    $shortcutPath = Join-Path $shortcutDir "Blender {version}.lnk"
+    $WshShell = New-Object -ComObject WScript.Shell
+    $Shortcut = $WshShell.CreateShortcut($shortcutPath)
+    $Shortcut.TargetPath = '{target_bin_win}'
+    $Shortcut.WorkingDirectory = '{working_dir_win}'
+    $Shortcut.Save()
+    """
+    
+    cmd = "powershell.exe"
+    try:
+        subprocess.run(
+            [cmd, "-NoProfile", "-NonInteractive", "-Command", ps_script],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        print(f"Created Windows Start Menu shortcut: Blender {version}")
+    except Exception as e:
+        print(f"Warning: Failed to create Windows Start Menu shortcut: {e}")
+
+def clean_broken_windows_shortcuts():
+    """Cleans up any broken Windows Start Menu shortcuts for Blender."""
+    import subprocess
+    ps_script = """
+    $appData = $env:APPDATA
+    if (-not $appData) {
+        $appData = [System.Environment]::GetFolderPath([System.Environment+SpecialFolder]::ApplicationData)
+    }
+    $shortcutDir = Join-Path $appData "Microsoft\\Windows\\Start Menu\\Programs"
+    if (Test-Path $shortcutDir) {
+        $WshShell = New-Object -ComObject WScript.Shell
+        Get-ChildItem -Path $shortcutDir -Filter "Blender *.lnk" | ForEach-Object {
+            $shortcut = $WshShell.CreateShortcut($_.FullName)
+            $target = $shortcut.TargetPath
+            if ($target -and -not (Test-Path $target)) {
+                Write-Output "Removing broken shortcut: $($_.FullName) pointing to $target"
+                Remove-Item $_.FullName -Force
+            }
+        }
+    }
+    """
+    cmd = "powershell.exe"
+    try:
+        subprocess.run(
+            [cmd, "-NoProfile", "-NonInteractive", "-Command", ps_script],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+    except Exception as e:
+        pass
 
 # --- Platform Resolution ---
 sys_platform = platform.system()
@@ -369,6 +446,9 @@ if IS_WSL:
         os.remove(symlink_path)
     os.symlink(target_bin, symlink_path)
     print(f"Created symlink: {symlink_path} -> {target_bin}")
+    
+    # Create Windows Start Menu shortcut
+    create_windows_shortcut(win_exe_path, B3DVERSION)
 
 elif sys_platform == "Windows":
     if OPEN_FOLDER:
@@ -390,6 +470,9 @@ elif sys_platform == "Windows":
         with open(bat_wrapper, 'w', encoding='utf-8') as bat_file:
             bat_file.write(f'@echo off\n"{target_bin}" %*\n')
         print(f"Developer Mode disabled. Fallback wrapper created: {bat_wrapper}")
+        
+    # Create Windows Start Menu shortcut
+    create_windows_shortcut(target_bin, B3DVERSION)
 
 elif sys_platform == "Darwin":
     if OPEN_FOLDER:
@@ -453,3 +536,8 @@ if os.path.exists(bin_dir):
                     os.remove(file_path)
             except:
                 pass
+
+# --- Clean Windows Start Menu shortcuts ---
+if sys_platform == "Windows" or IS_WSL:
+    print("Checking for broken Windows Start Menu shortcuts...")
+    clean_broken_windows_shortcuts()

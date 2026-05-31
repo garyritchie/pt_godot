@@ -17,7 +17,6 @@ from pathlib import Path
 
 # --- Configuration & Defaults ---
 DEFAULT_KEEP = 2
-DEFAULT_VERSION = "4.3"
 
 def load_makerc():
     """Parses local .makerc and parent .makerc files to resolve environment variables."""
@@ -40,34 +39,35 @@ def load_makerc():
 
 def parse_arguments():
     """Parses command-line arguments to allow easy, cross-platform overrides."""
-    parser = argparse.ArgumentParser(
+    global _parser
+    _parser = argparse.ArgumentParser(
         description="Robust Cross-Platform Godot Engine Downloader and Environment Manager"
     )
     # Collect all positional arguments to handle raw versions or variable assignment syntax
-    parser.add_argument(
+    _parser.add_argument(
         "pos_args",
         nargs="*",
         help="Positional arguments. Can be a raw version (e.g. 4.3) or key=value overrides (e.g. GODOT_VERSION=4.3 KEEP=3).",
         default=[]
     )
-    parser.add_argument(
+    _parser.add_argument(
         "-v", "--version",
         help="Godot version to download (alternative to positional argument).",
         default=None
     )
-    parser.add_argument(
+    _parser.add_argument(
         "-k", "--keep",
         type=int,
         help="Number of versions to keep. Overrides env and config.",
         default=None
     )
-    parser.add_argument(
+    _parser.add_argument(
         "--no-open",
         action="store_true",
         help="Suppress opening the download folder after extraction.",
         default=None
     )
-    return parser.parse_args()
+    return _parser.parse_args()
 
 # Parse arguments and load configurations
 args = parse_arguments()
@@ -97,13 +97,14 @@ if args.pos_args:
             # If raw string without '=', treat as positional version
             pos_version = arg
 
-# 1. Resolve Godot Version (CLI Explicit -> Positional Override -> Env -> .makerc -> Default)
+# 1. Resolve Godot Version (CLI Explicit -> Positional Override -> Env -> .makerc -> Required)
 cli_version = args.version or pos_version
-GODOT_VERSION_RAW = cli_version or os.environ.get('GODOT_VERSION') or config_vars.get('GODOT_VERSION') or DEFAULT_VERSION
+GODOT_VERSION_RAW = cli_version or os.environ.get('GODOT_VERSION') or config_vars.get('GODOT_VERSION')
 
-# Clean placeholder template scripts if needed
-if not GODOT_VERSION_RAW or GODOT_VERSION_RAW.startswith("{{"):
-    GODOT_VERSION_RAW = DEFAULT_VERSION
+if not GODOT_VERSION_RAW or re.search(r'\{\{.*?\}\}', GODOT_VERSION_RAW):
+    print("Error: No Godot version specified. Set the GODOT_VERSION environment variable or pass a version argument.\n")
+    _parser.print_help()
+    sys.exit(1)
 
 # 2. Resolve Keep count (CLI Explicit -> Positional Override -> Env -> .makerc -> Default)
 cli_keep = args.keep if args.keep is not None else pos_keep
@@ -150,6 +151,78 @@ def is_wsl():
         except:
             pass
     return False
+
+def create_windows_shortcut(target_bin, version):
+    """Creates a Windows Start Menu shortcut (.lnk) using PowerShell."""
+    import subprocess
+    
+    # Ensure Windows backslashes are used and single quotes are escaped for PowerShell
+    target_bin_win = target_bin.replace('/', '\\').replace("'", "''")
+    if '\\' in target_bin_win:
+        working_dir_win = target_bin_win.rsplit('\\', 1)[0]
+    else:
+        working_dir_win = os.path.dirname(target_bin_win)
+        
+    ps_script = f"""
+    $appData = $env:APPDATA
+    if (-not $appData) {{
+        $appData = [System.Environment]::GetFolderPath([System.Environment+SpecialFolder]::ApplicationData)
+    }}
+    $shortcutDir = Join-Path $appData "Microsoft\\Windows\\Start Menu\\Programs"
+    if (-not (Test-Path $shortcutDir)) {{
+        New-Item -ItemType Directory -Force -Path $shortcutDir | Out-Null
+    }}
+    $shortcutPath = Join-Path $shortcutDir "Godot {version}.lnk"
+    $WshShell = New-Object -ComObject WScript.Shell
+    $Shortcut = $WshShell.CreateShortcut($shortcutPath)
+    $Shortcut.TargetPath = '{target_bin_win}'
+    $Shortcut.WorkingDirectory = '{working_dir_win}'
+    $Shortcut.Save()
+    """
+    
+    cmd = "powershell.exe"
+    try:
+        subprocess.run(
+            [cmd, "-NoProfile", "-NonInteractive", "-Command", ps_script],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        print(f"Created Windows Start Menu shortcut: Godot {version}")
+    except Exception as e:
+        print(f"Warning: Failed to create Windows Start Menu shortcut: {e}")
+
+def clean_broken_windows_shortcuts():
+    """Cleans up any broken Windows Start Menu shortcuts for Godot."""
+    import subprocess
+    ps_script = """
+    $appData = $env:APPDATA
+    if (-not $appData) {
+        $appData = [System.Environment]::GetFolderPath([System.Environment+SpecialFolder]::ApplicationData)
+    }
+    $shortcutDir = Join-Path $appData "Microsoft\\Windows\\Start Menu\\Programs"
+    if (Test-Path $shortcutDir) {
+        $WshShell = New-Object -ComObject WScript.Shell
+        Get-ChildItem -Path $shortcutDir -Filter "Godot *.lnk" | ForEach-Object {
+            $shortcut = $WshShell.CreateShortcut($_.FullName)
+            $target = $shortcut.TargetPath
+            if ($target -and -not (Test-Path $target)) {
+                Write-Output "Removing broken shortcut: $($_.FullName) pointing to $target"
+                Remove-Item $_.FullName -Force
+            }
+        }
+    }
+    """
+    cmd = "powershell.exe"
+    try:
+        subprocess.run(
+            [cmd, "-NoProfile", "-NonInteractive", "-Command", ps_script],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+    except Exception as e:
+        pass
 
 # --- Platform & Architecture Resolution ---
 sys_platform = platform.system()
@@ -455,6 +528,13 @@ if IS_WSL:
         os.remove(symlink_path)
     os.symlink(GODOT_BIN_PATH, symlink_path)
     print(f"Created WSL Symlink: {symlink_path} -> {GODOT_BIN_PATH}")
+    
+    # Create Windows Start Menu shortcut
+    try:
+        win_exe_path = subprocess.check_output(['wslpath', '-w', GODOT_BIN_PATH], text=True).strip()
+        create_windows_shortcut(win_exe_path, GODOT_VERSION_RAW)
+    except Exception as e:
+        print(f"Warning: Failed to convert WSL path to Windows path for shortcut: {e}")
 
 elif sys_platform == "Windows":
     if OPEN_FOLDER:
@@ -471,6 +551,9 @@ elif sys_platform == "Windows":
         with open(bat_wrapper, 'w', encoding='utf-8') as bat_file:
             bat_file.write(f'@echo off\n"{GODOT_BIN_PATH}" %*\n')
         print(f"Developer Mode disabled. Fallback wrapper created: {bat_wrapper}")
+        
+    # Create Windows Start Menu shortcut
+    create_windows_shortcut(GODOT_BIN_PATH, GODOT_VERSION_RAW)
 
 elif sys_platform == "Darwin":
     if OPEN_FOLDER:
@@ -545,3 +628,8 @@ if os.path.exists(bin_dir):
                     os.remove(file_path)
             except:
                 pass
+
+# --- Clean Windows Start Menu shortcuts ---
+if sys_platform == "Windows" or IS_WSL:
+    print("Checking for broken Windows Start Menu shortcuts...")
+    clean_broken_windows_shortcuts()
